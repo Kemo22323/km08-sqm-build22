@@ -13,9 +13,15 @@
 # Uncomment a feed source
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
-# Replace the workflow's default source with the exact revision running on the
-# live KM08, then build only base-tree traffic-control components.
-git remote add official https://github.com/openwrt/openwrt.git 2>/dev/null || true
-git fetch --depth=1 official 69582e71fabfb42aa2842d24eecb1f4392048404
+# Use the reviewed KM08 device-support branch, then bake the traffic-control
+# kernel features into a complete board-specific sysupgrade image.
+git remote add km08 https://github.com/momothefox/openwrt.git 2>/dev/null || true
+git fetch --depth=1 km08 10b1f53972ec4d8e45aac2d01d4ce4ad954e1546
 git checkout --force FETCH_HEAD
+
+# The currently installed custom image reports this legacy board ID. Add it
+# to image metadata so sysupgrade -T can validate without --force.
+sed -i '/define Device\/mercury_km08-708h/a\  SUPPORTED_DEVICES += KM08-708H' \
+  target/linux/ramips/image/mt7621.mk
+
 : > feeds.conf.default
